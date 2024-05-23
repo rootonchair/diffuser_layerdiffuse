@@ -69,9 +69,11 @@ It is said by the author that Attention injection would result in better generat
 Foreground
 
 ![fg](assets/result_joint_0.png)
+
 Background
 
 ![bg](assets/result_joint_1.png)
+
 Blended
 
 ![blend](assets/result_joint_2.png)
