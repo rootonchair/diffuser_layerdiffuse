@@ -1,0 +1,7 @@
+diffusers
+torch
+safetensors
+huggingface_hub
+einops
+opencv-python
+tqdm
