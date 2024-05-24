@@ -54,6 +54,7 @@ if __name__ == "__main__":
 ```
 
 Would produce the below image
+
 ![demo_result](assets/demo_result.png)
 
 ## Scripts
