@@ -1,6 +1,7 @@
 import torch
 from safetensors.torch import load_file
-from models import LoraLoader, AttentionSharingProcessor
+from diffusers.models.attention_processor import Attention, IPAdapterAttnProcessor, IPAdapterAttnProcessor2_0
+from models import LoraLoader, AttentionSharingProcessor, IPAdapterAttnShareProcessor
 
 
 def merge_delta_weights_into_unet(pipe, delta_weights):
@@ -66,12 +67,16 @@ def load_lora_to_unet(unet, model_path, frames=1):
     for i in range(32):
         real_key = module_mapping_sd15[i]
         diffuser_key = sd15_to_diffusers[real_key]
-        attn_module = get_attr(unet, diffuser_key)
-        u = AttentionSharingProcessor(attn_module, frames=frames, use_control=False).to(torch.float16)
-        u = u.to("cuda")
+        attn_module: Attention = get_attr(unet, diffuser_key)
+        if isinstance(attn_module.processor, IPAdapterAttnProcessor2_0) \
+            or isinstance(attn_module.processor, IPAdapterAttnProcessor):
+            u = IPAdapterAttnShareProcessor(attn_module, frames=frames).to(unet.dtype)
+        else:
+            u = AttentionSharingProcessor(attn_module, frames=frames).to(unet.dtype)
+        u = u.to(unet.device)
         layer_list.append(u)
         attn_module.set_processor(u)
     
     loader = LoraLoader(layer_list)
     lora_state_dict = load_file(model_path)
-    loader.load_state_dict(lora_state_dict)
+    loader.load_state_dict(lora_state_dict, strict=False)

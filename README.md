@@ -63,9 +63,10 @@ Would produce the below image
 It is said by the author that Attention injection would result in better generation quality and Conv injection would result in better prompt alignment
 
 ## Example
-### Generate only transparent image with SD1.5
+### Stable Diffusion 1.5
+#### Generate only transparent image with SD1.5
 ![demo_dreamshaper](assets/dreamshaper_sd.png)
-### Generate foreground and background together
+#### Generate foreground and background together
 Foreground
 
 ![fg](assets/result_joint_0.png)
@@ -75,11 +76,21 @@ Background
 Blended
 
 ![blend](assets/result_joint_2.png)
-### Generate with SDXL (Attn)
+
+#### Use with ControlNet
+
+![controlnet](assets/controlnet_output.png)
+
+#### Use with IP-Adapter
+
+![ip_adapter](assets/ipadapter_output.png)
+
+### Stable Diffusion XL
+#### Generate with SDXL (Attn)
 Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel-art-xl)
 ![sdxl_attn](assets/result_sdxl.png)
 
-### Generate with SDXL (Conv)
+#### Generate with SDXL (Conv)
 Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel-art-xl)
 ![sdxl_conv](assets/result_conv_sdxl.png)
 
