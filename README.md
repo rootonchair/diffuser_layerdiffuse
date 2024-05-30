@@ -1,4 +1,7 @@
 # Diffusers API of Transparent Image Layer Diffusion using Latent Transparency
+
+🤗 **Hugging Face**: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/rootonchair/diffuser_layerdiffuse) 🔥🔥🔥
+
 Create transparent image with Diffusers!
 
 This is a port to Diffuser from original [SD Webui's Layer Diffusion](https://github.com/layerdiffusion/sd-forge-layerdiffuse) to extend the ability to generate transparent image with your favorite API
@@ -51,6 +54,7 @@ if __name__ == "__main__":
 ```
 
 Would produce the below image
+
 ![demo_result](assets/demo_result.png)
 
 ## Scripts
@@ -70,9 +74,11 @@ It is said by the author that Attention injection would result in better generat
 Foreground
 
 ![fg](assets/result_joint_0.png)
+
 Background
 
 ![bg](assets/result_joint_1.png)
+
 Blended
 
 ![blend](assets/result_joint_2.png)
