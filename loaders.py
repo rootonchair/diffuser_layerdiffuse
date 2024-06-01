@@ -1,7 +1,7 @@
 import torch
 from safetensors.torch import load_file
-from diffusers.models.attention_processor import Attention, IPAdapterAttnProcessor, IPAdapterAttnProcessor2_0
-from models import LoraLoader, AttentionSharingProcessor, IPAdapterAttnShareProcessor
+from diffusers.models.attention_processor import Attention, IPAdapterAttnProcessor, IPAdapterAttnProcessor2_0, AttnProcessor2_0
+from models import LoraLoader, AttentionSharingProcessor, IPAdapterAttnShareProcessor, AttentionSharingProcessor2_0, IPAdapterAttnShareProcessor2_0
 
 
 def merge_delta_weights_into_unet(pipe, delta_weights):
@@ -68,9 +68,12 @@ def load_lora_to_unet(unet, model_path, frames=1):
         real_key = module_mapping_sd15[i]
         diffuser_key = sd15_to_diffusers[real_key]
         attn_module: Attention = get_attr(unet, diffuser_key)
-        if isinstance(attn_module.processor, IPAdapterAttnProcessor2_0) \
-            or isinstance(attn_module.processor, IPAdapterAttnProcessor):
+        if isinstance(attn_module.processor, IPAdapterAttnProcessor2_0):
+            u = IPAdapterAttnShareProcessor2_0(attn_module, frames=frames).to(unet.dtype)
+        elif isinstance(attn_module.processor, IPAdapterAttnProcessor):
             u = IPAdapterAttnShareProcessor(attn_module, frames=frames).to(unet.dtype)
+        elif isinstance(attn_module.processor, AttnProcessor2_0):
+            u = AttentionSharingProcessor2_0(attn_module, frames=frames).to(unet.dtype)
         else:
             u = AttentionSharingProcessor(attn_module, frames=frames).to(unet.dtype)
         u = u.to(unet.device)
