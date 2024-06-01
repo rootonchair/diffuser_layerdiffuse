@@ -17,6 +17,8 @@ pip install -r requirements.txt
 
 Generate transparent image with SD1.5 models. In this example, we will use [digiplay/Juggernaut_final](https://huggingface.co/digiplay/Juggernaut_final) as the base model
 
+### Stable Diffusion 1.5
+
 ```python
 from huggingface_hub import hf_hub_download
 from safetensors.torch import load_file
@@ -28,34 +30,70 @@ from models import TransparentVAEDecoder
 from loaders import load_lora_to_unet
 
 
+model_path = hf_hub_download(
+    'LayerDiffusion/layerdiffusion-v1',
+    'layer_sd15_vae_transparent_decoder.safetensors',
+)
 
-if __name__ == "__main__":
+vae_transparent_decoder = TransparentVAEDecoder.from_pretrained("digiplay/Juggernaut_final", subfolder="vae", torch_dtype=torch.float16).to("cuda")
+vae_transparent_decoder.set_transparent_decoder(load_file(model_path))
 
-    model_path = hf_hub_download(
-        'LayerDiffusion/layerdiffusion-v1',
-        'layer_sd15_vae_transparent_decoder.safetensors',
-    )
+pipeline = StableDiffusionPipeline.from_pretrained("digiplay/Juggernaut_final", vae=vae_transparent_decoder, torch_dtype=torch.float16, safety_checker=None).to("cuda")
 
-    vae_transparent_decoder = TransparentVAEDecoder.from_pretrained("digiplay/Juggernaut_final", subfolder="vae", torch_dtype=torch.float16).to("cuda")
-    vae_transparent_decoder.set_transparent_decoder(load_file(model_path))
+model_path = hf_hub_download(
+    'LayerDiffusion/layerdiffusion-v1',
+    'layer_sd15_transparent_attn.safetensors'
+)
 
-    pipeline = StableDiffusionPipeline.from_pretrained("digiplay/Juggernaut_final", vae=vae_transparent_decoder, torch_dtype=torch.float16, safety_checker=None).to("cuda")
+load_lora_to_unet(pipeline.unet, model_path, frames=1)
 
-    model_path = hf_hub_download(
-        'LayerDiffusion/layerdiffusion-v1',
-        'layer_sd15_transparent_attn.safetensors'
-    )
-
-    load_lora_to_unet(pipeline.unet, model_path, frames=1)
-    
-    image = pipeline(prompt="a dog sitting in room, high quality", 
-                       width=512, height=512,
-                       num_images_per_prompt=1, return_dict=False)[0]
+image = pipeline(prompt="a dog sitting in room, high quality", 
+                    width=512, height=512,
+                    num_images_per_prompt=1, return_dict=False)[0]
 ```
 
 Would produce the below image
 
 ![demo_result](assets/demo_result.png)
+
+### Stable Diffusion XL
+
+It's a LoRA and will compatible with any Diffusers usage: ControlNet, IPAdapter, etc.
+
+```python
+from huggingface_hub import hf_hub_download
+from safetensors.torch import load_file
+import torch
+
+from diffusers import StableDiffusionXLPipeline
+
+from models import TransparentVAEDecoder
+
+
+transparent_vae = TransparentVAEDecoder.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
+model_path = hf_hub_download(
+    'LayerDiffusion/layerdiffusion-v1',
+    'vae_transparent_decoder.safetensors',
+)
+transparent_vae.set_transparent_decoder(load_file(model_path))
+
+pipeline = StableDiffusionXLPipeline.from_pretrained(
+    "stabilityai/stable-diffusion-xl-base-1.0", 
+    vae=transparent_vae,
+    torch_dtype=torch.float16, variant="fp16", use_safetensors=True
+).to("cuda")
+pipeline.load_lora_weights('rootonchair/diffuser_layerdiffuse', weight_name='diffuser_layer_xl_transparent_attn.safetensors')
+
+seed = torch.randint(high=1000000, size=(1,)).item()
+prompt = "a cute corgi"
+negative_prompt = ""
+images = pipeline(prompt=prompt, 
+                    negative_prompt=negative_prompt,
+                    generator=torch.Generator(device='cuda').manual_seed(seed),
+                    num_images_per_prompt=1, return_dict=False)[0]
+
+images[0].save("result_sdxl.png")
+```
 
 ## Scripts
 
