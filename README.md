@@ -109,17 +109,11 @@ It is said by the author that Attention injection would result in better generat
 #### Generate only transparent image with SD1.5
 ![demo_dreamshaper](assets/dreamshaper_sd.png)
 #### Generate foreground and background together
-Foreground
 
-![fg](assets/result_joint_0.png)
+|              Foreground               |              Background               |                Blended                |
+|:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
+| ![fg](assets/result_joint_0.png)      |   ![bg](assets/result_joint_1.png)    | ![blend](assets/result_joint_2.png)   |
 
-Background
-
-![bg](assets/result_joint_1.png)
-
-Blended
-
-![blend](assets/result_joint_2.png)
 
 #### Use with ControlNet
 
@@ -130,13 +124,13 @@ Blended
 ![ip_adapter](assets/ipadapter_output.png)
 
 ### Stable Diffusion XL
-#### Generate with SDXL (Attn)
+#### Combine with other LoRAs
 Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel-art-xl)
-![sdxl_attn](assets/result_sdxl.png)
 
-#### Generate with SDXL (Conv)
-Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel-art-xl)
-![sdxl_conv](assets/result_conv_sdxl.png)
+|      Attn Injection (LoRA)                |        Conv Injection (Weight diff)            |
+|:-------------------------------------:|:-------------------------------------:|
+| ![sdxl_attn](assets/result_sdxl.png)      |   ![sdxl_conv](assets/result_conv_sdxl.png)    |
+
 
 ## Acknowledgments
 This work is based on the great code at
