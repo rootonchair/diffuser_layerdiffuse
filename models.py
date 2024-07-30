@@ -3,17 +3,33 @@ import torch.nn.functional as F
 import torch
 import cv2
 import numpy as np
-
 import einops
+import importlib.metadata
+from packaging.version import parse
 from tqdm import tqdm
 from typing import Optional, Tuple, Union, List
+
 from diffusers import AutoencoderKL
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.unet_2d_blocks import UNetMidBlock2D, get_down_block, get_up_block
 from diffusers.models.autoencoders.vae import DecoderOutput
 from diffusers.image_processor import IPAdapterMaskProcessor
 from diffusers.models.attention_processor import Attention, AttnProcessor
+
+
+diffusers_version = importlib.metadata.version('diffusers')
+
+def check_diffusers_version(min_version="0.25.0"):
+    assert parse(diffusers_version) >= parse(
+        min_version
+    ), f"diffusers>={min_version} requirement not satisfied. Please install correct diffusers version."
+
+check_diffusers_version()
+
+if parse(diffusers_version) >= parse("0.29.0"):
+    from diffusers.models.unets.unet_2d_blocks import UNetMidBlock2D, get_down_block, get_up_block
+else:
+    from diffusers.models.unet_2d_blocks import UNetMidBlock2D, get_down_block, get_up_block
 
 
 def zero_module(module):
