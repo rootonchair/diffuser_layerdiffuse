@@ -222,6 +222,7 @@ class TransparentVAEDecoder(AutoencoderKL):
         latents_std: Optional[Tuple[float]] = None,
         force_upcast: float = True,
     ):
+        self.mod_number = None
         super().__init__(in_channels, out_channels, down_block_types, up_block_types, block_out_channels, layers_per_block, act_fn, latent_channels, norm_num_groups, sample_size, scaling_factor, latents_mean, latents_std, force_upcast)
 
     def set_transparent_decoder(self, sd, mod_number=1):
@@ -274,7 +275,7 @@ class TransparentVAEDecoder(AutoencoderKL):
 
         result_pixel = []
         for i in range(int(z.shape[0])):
-            if self.mod_number != 1 and i % self.mod_number != 0:
+            if self.mod_number is None or (self.mod_number != 1 and i % self.mod_number != 0):
                 img = torch.cat((pixel[i:i+1], torch.ones_like(pixel[i:i+1,:1,:,:])), dim=1)
                 result_pixel.append(img)
                 continue
@@ -404,7 +405,7 @@ class LoRALinearLayer(torch.nn.Module):
 
 
 class AttentionSharingProcessor(nn.Module):
-    def __init__(self, module, frames=2, rank=256):
+    def __init__(self, module, frames=2, rank=256, use_control=False):
         super().__init__()
 
         self.heads = module.heads
@@ -434,6 +435,16 @@ class AttentionSharingProcessor(nn.Module):
         self.temporal_v = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size)
         self.temporal_o = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size)
 
+        self.control_convs = None
+
+        if use_control:
+            self.control_convs = [torch.nn.Sequential(
+                torch.nn.Conv2d(256, 256, kernel_size=3, padding=1, stride=1),
+                torch.nn.SiLU(),
+                torch.nn.Conv2d(256, hidden_size, kernel_size=1),
+            ) for _ in range(self.frames)]
+            self.control_convs = torch.nn.ModuleList(self.control_convs)
+
     def __call__(
         self,
         attn: Attention,
@@ -441,8 +452,7 @@ class AttentionSharingProcessor(nn.Module):
         encoder_hidden_states: Optional[torch.FloatTensor] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
         temb: Optional[torch.Tensor] = None,
-        *args,
-        **kwargs,
+        layerdiffuse_control_signals: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
 
         if attn.spatial_norm is not None:
@@ -462,7 +472,19 @@ class AttentionSharingProcessor(nn.Module):
         if attn.group_norm is not None:
             hidden_states = attn.group_norm(hidden_states.transpose(1, 2)).transpose(1, 2)
 
+        # LayerDiffuse main logic
         modified_hidden_states = einops.rearrange(hidden_states, '(b f) d c -> f b d c', f=self.frames)
+
+        if self.control_convs is not None:
+            context_dim = int(modified_hidden_states.shape[2])
+            control_outs = []
+            for f in range(self.frames):
+                control_signal = layerdiffuse_control_signals[context_dim].to(modified_hidden_states)
+                control = self.control_convs[f](control_signal)
+                control = einops.rearrange(control, 'b c h w -> b (h w) c')
+                control_outs.append(control)
+            control_outs = torch.stack(control_outs, dim=0)
+            modified_hidden_states = modified_hidden_states + control_outs.to(modified_hidden_states)
 
         if encoder_hidden_states is None:
             framed_context = modified_hidden_states
@@ -779,7 +801,7 @@ class IPAdapterAttnShareProcessor(nn.Module):
 
 
 class AttentionSharingProcessor2_0(nn.Module):
-    def __init__(self, module, frames=2, rank=256):
+    def __init__(self, module, frames=2, rank=256, use_control=False):
         super().__init__()
 
         self.heads = module.heads
@@ -809,6 +831,16 @@ class AttentionSharingProcessor2_0(nn.Module):
         self.temporal_v = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size)
         self.temporal_o = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size)
 
+        self.control_convs = None
+
+        if use_control:
+            self.control_convs = [torch.nn.Sequential(
+                torch.nn.Conv2d(256, 256, kernel_size=3, padding=1, stride=1),
+                torch.nn.SiLU(),
+                torch.nn.Conv2d(256, hidden_size, kernel_size=1),
+            ) for _ in range(self.frames)]
+            self.control_convs = torch.nn.ModuleList(self.control_convs)
+
     def __call__(
         self,
         attn: Attention,
@@ -816,8 +848,7 @@ class AttentionSharingProcessor2_0(nn.Module):
         encoder_hidden_states: Optional[torch.FloatTensor] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
         temb: Optional[torch.Tensor] = None,
-        *args,
-        **kwargs,
+        layerdiffuse_control_signals: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
 
         if attn.spatial_norm is not None:
@@ -837,7 +868,19 @@ class AttentionSharingProcessor2_0(nn.Module):
         if attn.group_norm is not None:
             hidden_states = attn.group_norm(hidden_states.transpose(1, 2)).transpose(1, 2)
 
+        # LayerDiffuse main logic
         modified_hidden_states = einops.rearrange(hidden_states, '(b f) d c -> f b d c', f=self.frames)
+
+        if self.control_convs is not None:
+            context_dim = int(modified_hidden_states.shape[2])
+            control_outs = []
+            for f in range(self.frames):
+                control_signal = layerdiffuse_control_signals[context_dim].to(modified_hidden_states)
+                control = self.control_convs[f](control_signal)
+                control = einops.rearrange(control, 'b c h w -> b (h w) c')
+                control_outs.append(control)
+            control_outs = torch.stack(control_outs, dim=0)
+            modified_hidden_states = modified_hidden_states + control_outs.to(modified_hidden_states)
 
         if encoder_hidden_states is None:
             framed_context = modified_hidden_states
