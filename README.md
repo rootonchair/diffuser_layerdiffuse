@@ -99,6 +99,9 @@ images[0].save("result_sdxl.png")
 
 - `test_diffusers_fg_only.py`: Only generate transparent foreground image
 - `test_diffusers_joint.py`: Generate foreground, background, blend image together. Hence `num_images_per_prompt` must be batch size of 3
+- `test_diffusers_fg_bg_cond.py`: Generate foreground, conditioned on background provided. Hence `num_images_per_prompt` must be batch size of 2
+- `test_diffusers_bg_fg_cond.py`: Generate background, conditioned on foreground provided. Hence `num_images_per_prompt` must be batch size of 2
+- `test_diffusers_joint.py`: Generate foreground, background, blend image together. Hence `num_images_per_prompt` must be batch size of 3
 - `test_diffusers_fg_only_sdxl.py`: Only generate transparent foreground image using Attention injection in SDXL
 - `test_diffusers_fg_only_conv_sdxl.py`: Only generate transparent foreground image using Conv injection in SDXL
 
@@ -122,6 +125,21 @@ It is said by the author that Attention injection would result in better generat
 #### Use with IP-Adapter
 
 ![ip_adapter](assets/ipadapter_output.png)
+
+#### Generate foreground condition on background
+
+The blended image will not have the correct color but you can apply foreground image on the condition background.
+
+|              Foreground               |              Background (Condition)              |                Blended                |
+|:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
+| ![fg](assets/result_fg_bg_cond.png)      |   ![bg](assets/bg_cond.png)    | ![blend](assets/result_blended_fg_bg_cond.png)   |
+
+
+#### Generate background condition on foreground
+
+|              Foreground (Condition)              |              Background               |                Blended                |
+|:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
+| ![fg](assets/fg_cond.png)      |   ![bg](assets/result_bg_fg_cond.png)    | ![blend](assets/result_blended_bg_fg_cond.png)   |
 
 ### Stable Diffusion XL
 #### Combine with other LoRAs
