@@ -4,8 +4,8 @@ import torch
 
 from diffusers import StableDiffusionPipeline
 
-from models import TransparentVAEDecoder
-from loaders import load_lora_to_unet
+from layer_diffuse.models import TransparentVAEDecoder
+from layer_diffuse.loaders import load_lora_to_unet
 
 
 

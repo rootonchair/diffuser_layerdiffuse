@@ -5,7 +5,7 @@ from PIL import Image
 
 from diffusers import StableDiffusionXLInpaintPipeline
 
-from models import TransparentVAEDecoder, TransparentVAEEncoder
+from layer_diffuse.models import TransparentVAEDecoder, TransparentVAEEncoder
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
-import torch
 from safetensors.torch import load_file
 from diffusers.models.attention_processor import Attention, IPAdapterAttnProcessor, IPAdapterAttnProcessor2_0, AttnProcessor2_0
-from models import LoraLoader, AttentionSharingProcessor, IPAdapterAttnShareProcessor, AttentionSharingProcessor2_0, IPAdapterAttnShareProcessor2_0
+from .models import LoraLoader, AttentionSharingProcessor, IPAdapterAttnShareProcessor, AttentionSharingProcessor2_0, IPAdapterAttnShareProcessor2_0
 
 
 def merge_delta_weights_into_unet(pipe, delta_weights):

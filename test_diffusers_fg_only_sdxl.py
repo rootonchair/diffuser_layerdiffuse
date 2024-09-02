@@ -4,7 +4,7 @@ import torch
 
 from diffusers import StableDiffusionXLPipeline
 
-from models import TransparentVAEDecoder
+from layer_diffuse.models import TransparentVAEDecoder
 
 if __name__ == "__main__":
 

@@ -1,12 +1,11 @@
 from huggingface_hub import hf_hub_download
 from safetensors.torch import load_file
 import torch
-from PIL import Image
 
 from diffusers import StableDiffusionXLPipeline
 
-from models import TransparentVAEDecoder
-from loaders import merge_delta_weights_into_unet
+from layer_diffuse.models import TransparentVAEDecoder
+from layer_diffuse.loaders import merge_delta_weights_into_unet
 
 
 if __name__ == "__main__":

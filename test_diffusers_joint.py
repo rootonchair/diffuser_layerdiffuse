@@ -1,12 +1,11 @@
 from huggingface_hub import hf_hub_download
 from safetensors.torch import load_file
 import torch
-from PIL import Image
 
 from diffusers import StableDiffusionPipeline
 
-from models import TransparentVAEDecoder, LoraLoader, AttentionSharingProcessor
-from loaders import load_lora_to_unet
+from layer_diffuse.models import TransparentVAEDecoder
+from layer_diffuse.loaders import load_lora_to_unet
 
 
 

@@ -6,9 +6,9 @@ import numpy as np
 
 from diffusers import StableDiffusionPipeline
 
-from models import TransparentVAEDecoder
-from loaders import load_lora_to_unet
-from utils import rgba2rgbfp32, crop_and_resize_image
+from layer_diffuse.models import TransparentVAEDecoder
+from layer_diffuse.loaders import load_lora_to_unet
+from layer_diffuse.utils import rgba2rgbfp32, crop_and_resize_image
 
 
 
