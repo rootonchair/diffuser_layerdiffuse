@@ -12,6 +12,7 @@ from loaders import merge_delta_weights_into_unet
 if __name__ == "__main__":
 
     transparent_vae = TransparentVAEDecoder.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
+    transparent_vae.config.force_upcast = False
     model_path = hf_hub_download(
         'LayerDiffusion/layerdiffusion-v1',
         'vae_transparent_decoder.safetensors',
