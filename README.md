@@ -104,6 +104,7 @@ images[0].save("result_sdxl.png")
 - `test_diffusers_joint.py`: Generate foreground, background, blend image together. Hence `num_images_per_prompt` must be batch size of 3
 - `test_diffusers_fg_only_sdxl.py`: Only generate transparent foreground image using Attention injection in SDXL
 - `test_diffusers_fg_only_conv_sdxl.py`: Only generate transparent foreground image using Conv injection in SDXL
+- `test_diffusers_fg_only_sdxl_img2img.py`: Generate transparent foreground image inpaint using Attention injection in SDXL
 
 It is said by the author that Attention injection would result in better generation quality and Conv injection would result in better prompt alignment
 
@@ -149,6 +150,12 @@ Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel
 |:-------------------------------------:|:-------------------------------------:|
 | ![sdxl_attn](assets/result_sdxl.png)      |   ![sdxl_conv](assets/result_conv_sdxl.png)    |
 
+#### Inpaint
+Use inpaint pipeline to refine poorly cropped transparent image
+
+|              Foreground               |              Mask               |                Inpaint                |
+|:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
+| ![man_crop](assets/man_crop.png)      |   ![mask](assets/man_mask.png)    | ![inpaint](assets/result_inpaint_sdxl.png)   |
 
 ## Acknowledgments
 This work is based on the great code at
