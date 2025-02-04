@@ -19,7 +19,7 @@ if __name__ == "__main__":
     pipeline = StableDiffusionXLPipeline.from_pretrained(
         "stabilityai/stable-diffusion-xl-base-1.0", 
         vae=transparent_vae,
-        torch_dtype=torch.float16, variant="fp16", use_safetensors=True
+        torch_dtype=torch.float16, variant="fp16", use_safetensors=True, add_watermarker=False
     ).to("cuda")
     pipeline.load_lora_weights('rootonchair/diffuser_layerdiffuse', weight_name='diffuser_layer_xl_transparent_attn.safetensors')
 

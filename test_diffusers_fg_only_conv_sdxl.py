@@ -21,7 +21,7 @@ if __name__ == "__main__":
     pipeline = StableDiffusionXLPipeline.from_pretrained(
         "stabilityai/stable-diffusion-xl-base-1.0", 
         vae=transparent_vae,
-        torch_dtype=torch.float16, variant="fp16", use_safetensors=True
+        torch_dtype=torch.float16, variant="fp16", use_safetensors=True, add_watermarker=False
     ).to("cuda")
     model_path = hf_hub_download(
         'rootonchair/diffuser_layerdiffuse',
