@@ -1,6 +1,10 @@
 # Diffusers API of Transparent Image Layer Diffusion using Latent Transparency
 
-🤗 **Hugging Face**: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/rootonchair/diffuser_layerdiffuse) 🔥🔥🔥
+✨🫧🖼️ **Transparent Layer Diffusion for Diffusers** 🖼️🫧✨
+
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Weights%20%26%20Demo-ffcc4d?style=for-the-badge)](https://huggingface.co/rootonchair/diffuser_layerdiffuse)
+[![Diffusers](https://img.shields.io/badge/%F0%9F%9A%80%20Diffusers-SDXL%20%7C%20SD1.5-7c3aed?style=for-the-badge)](https://github.com/huggingface/diffusers)
+[![LayerDiffuse](https://img.shields.io/badge/%F0%9F%94%A5%20LayerDiffuse-Transparent%20PNG-10b981?style=for-the-badge)](https://github.com/layerdiffusion/sd-forge-layerdiffuse)
 
 Create transparent image with Diffusers!
 
@@ -8,6 +12,14 @@ This is a port to Diffuser from original [SD Webui's Layer Diffusion](https://gi
 
 
 Paper: [Transparent Image Layer Diffusion using Latent Transparency](https://arxiv.org/abs/2402.17113)
+
+## Updates
+
+- Added SDXL conditional LayerDiffuse examples for foreground-to-blending, background-to-blending, foreground-and-blend-to-background, and background-and-blend-to-foreground workflows.
+- Converted SDXL conditional weights are hosted on `rootonchair/diffuser_layerdiffuse` and load from the Hugging Face cache by default.
+- Consolidated SDXL Forge weight conversion into `scripts/convert_xl_layerdiffuse.py` with `--mode fg2ble|bg2ble|fgble2bg|bgble2fg`.
+- Refactored demo scripts to expose CLI options for model, prompt, seed, output path, and `--cpu-offload`; see the examples below or run any script with `--help`.
+
 ## Setup
 ```bash
 pip install -r requirements.txt
