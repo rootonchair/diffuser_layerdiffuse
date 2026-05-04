@@ -1,6 +1,4 @@
-# Diffusers API of Transparent Image Layer Diffusion using Latent Transparency
-
-✨🫧🖼️ **Transparent Layer Diffusion for Diffusers** 🖼️🫧✨
+# ✨🫧🖼️ **Transparent Layer Diffusion for Diffusers** 🖼️🫧✨
 
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Weights%20%26%20Demo-ffcc4d?style=for-the-badge)](https://huggingface.co/rootonchair/diffuser_layerdiffuse)
 [![Diffusers](https://img.shields.io/badge/%F0%9F%9A%80%20Diffusers-SDXL%20%7C%20SD1.5-7c3aed?style=for-the-badge)](https://github.com/huggingface/diffusers)
