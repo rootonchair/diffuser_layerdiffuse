@@ -5,7 +5,6 @@ from pathlib import Path
 from safetensors.torch import load_file, save_file
 
 
-DEFAULT_INPUT = Path("/mnt/disks/workspace/sd-forge-layerdiffuse/layer_xl_fg2ble.safetensors")
 DEFAULT_OUTPUT = Path("weights/diffuser_layer_xl_fg2ble.safetensors")
 _DIFF_SUFFIX_RE = re.compile(r"::diff::\d+$")
 
@@ -122,7 +121,7 @@ def convert_file(input_path, output_path, expected_input_channels=8):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Convert Forge layer_xl_fg2ble.safetensors to Diffusers keys.")
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="Path to Forge layer_xl_fg2ble.safetensors.")
+    parser.add_argument("--input", type=Path, required=True, help="Path to Forge layer_xl_fg2ble.safetensors.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="Converted Diffusers delta output path.")
     parser.add_argument("--expected-input-channels", type=int, default=8)
     return parser.parse_args()

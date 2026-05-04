@@ -14,8 +14,6 @@ def test_xl_fg2ble_example_gpu_smoke(tmp_path):
         pytest.skip("Set LAYERDIFFUSE_RUN_GPU_SMOKE=1 to run model-download GPU smoke tests.")
     if not torch.cuda.is_available():
         pytest.skip("CUDA is not available.")
-    if not Path("weights/diffuser_layer_xl_fg2ble.safetensors").exists():
-        pytest.skip("Converted fg2ble weight is not available.")
 
     output = tmp_path / "result_xl_fg2ble.png"
     subprocess.run(
@@ -45,7 +43,6 @@ def test_xl_fgble2bg_example_gpu_smoke(tmp_path):
     if not torch.cuda.is_available():
         pytest.skip("CUDA is not available.")
     required = [
-        Path("weights/diffuser_layer_xl_fgble2bg.safetensors"),
         Path("assets/sdxl_fg_cond_detailed.png"),
         Path("assets/sdxl_fg2ble_detailed_default_scheduler.png"),
     ]

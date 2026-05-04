@@ -120,52 +120,27 @@ images[0].save("result_sdxl.png")
 
 It is said by the author that Attention injection would result in better generation quality and Conv injection would result in better prompt alignment
 
-### Convert SDXL Foreground-to-Blending Weight
+## Convert Scripts
 
-Convert the Forge delta weight to Diffusers key names before running the fg2ble example:
+The SDXL conditional examples download converted Diffusers weights from
+`rootonchair/diffuser_layerdiffuse` by default. Use these scripts only when you
+need to convert original Forge-format weights yourself.
+
+Convert foreground-to-blending:
 
 ```bash
 python scripts/convert_xl_fg2ble.py \
-  --input /mnt/disks/workspace/sd-forge-layerdiffuse/layer_xl_fg2ble.safetensors \
+  --input path/to/layer_xl_fg2ble.safetensors \
   --output weights/diffuser_layer_xl_fg2ble.safetensors
 ```
 
-Then run inference:
-
-```bash
-python test_diffusers_xl_fg2ble.py \
-  --foreground assets/sdxl_fg_cond_detailed.png \
-  --output result_xl_fg2ble.png
-```
-
-| SDXL foreground condition | Generated blended image |
-|:-------------------------:|:-----------------------:|
-| ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL foreground-to-blending result](assets/sdxl_fg2ble_detailed_default_scheduler.png) |
-
-For the foreground-and-blend-to-background model, convert the 12-channel concat delta:
+Convert foreground-and-blend-to-background:
 
 ```bash
 python scripts/convert_xl_fgble2bg.py \
-  --input /mnt/disks/workspace/sd-forge-layerdiffuse/layer_xl_fgble2bg.safetensors \
+  --input path/to/layer_xl_fgble2bg.safetensors \
   --output weights/diffuser_layer_xl_fgble2bg.safetensors
 ```
-
-Then run inference with a transparent foreground and a blended image:
-
-```bash
-python test_diffusers_xl_fgble2bg.py \
-  --foreground assets/sdxl_fg_cond_detailed.png \
-  --blend assets/sdxl_fg2ble_detailed_default_scheduler.png \
-  --output result_xl_fgble2bg.png
-```
-
-The fgble2bg example forces DPM++ 2M SDE Karras via Diffusers'
-`DPMSolverMultistepScheduler` and defaults to an 11-step fg+blend pass followed by
-a 9-step base-UNet cleanup pass when `--steps 20` is used.
-
-| Foreground condition | Blended condition | Generated background |
-|:--------------------:|:-----------------:|:--------------------:|
-| ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL blended condition](assets/sdxl_fg2ble_detailed_default_scheduler.png) | ![SDXL foreground-and-blend-to-background result](assets/sdxl_fgble2bg_dpm_forced.png) |
 
 ## Example
 ### Stable Diffusion 1.5
@@ -202,6 +177,41 @@ The blended image will not have the correct color but you can apply foreground i
 | ![fg](assets/fg_cond.png)      |   ![bg](assets/result_bg_fg_cond.png)    | ![blend](assets/result_blended_bg_fg_cond.png)   |
 
 ### Stable Diffusion XL
+#### Foreground condition
+
+The fg2ble example downloads `diffuser_layer_xl_fg2ble.safetensors` from
+`rootonchair/diffuser_layerdiffuse` into the Hugging Face cache and loads it
+from there:
+
+```bash
+python test_diffusers_xl_fg2ble.py \
+  --foreground assets/sdxl_fg_cond_detailed.png \
+  --output result_xl_fg2ble.png
+```
+
+| SDXL foreground condition | Generated blended image |
+|:-------------------------:|:-----------------------:|
+| ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL foreground-to-blending result](assets/sdxl_fg2ble_detailed_default_scheduler.png) |
+
+The fgble2bg example downloads `diffuser_layer_xl_fgble2bg.safetensors` from
+`rootonchair/diffuser_layerdiffuse` into the Hugging Face cache and loads it
+from there:
+
+```bash
+python test_diffusers_xl_fgble2bg.py \
+  --foreground assets/sdxl_fg_cond_detailed.png \
+  --blend assets/sdxl_fg2ble_detailed_default_scheduler.png \
+  --output result_xl_fgble2bg.png
+```
+
+The fgble2bg example forces DPM++ 2M SDE Karras via Diffusers'
+`DPMSolverMultistepScheduler` and defaults to an 11-step fg+blend pass followed by
+a 9-step base-UNet cleanup pass when `--steps 20` is used.
+
+| Foreground condition | Blended condition | Generated background |
+|:--------------------:|:-----------------:|:--------------------:|
+| ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL blended condition](assets/sdxl_fg2ble_detailed_default_scheduler.png) | ![SDXL foreground-and-blend-to-background result](assets/sdxl_fgble2bg_dpm_forced.png) |
+
 #### Combine with other LoRAs
 Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel-art-xl)
 

@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from diffusers import AutoencoderKL, DPMSolverMultistepScheduler, StableDiffusionXLPipeline
+from huggingface_hub import hf_hub_download
 from PIL import Image
 from safetensors.torch import load_file
 
@@ -13,6 +14,10 @@ from layer_diffuse.loaders import (
     merge_sdxl_concat_delta_weights_into_unet,
 )
 from layer_diffuse.utils import crop_and_resize_image, rgba2rgbfp32
+
+
+DEFAULT_WEIGHT_REPO = "rootonchair/diffuser_layerdiffuse"
+DEFAULT_WEIGHT_NAME = "diffuser_layer_xl_fgble2bg.safetensors"
 
 
 def encode_condition_image(pipeline, image_path, width, height):
@@ -32,7 +37,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Generate an SDXL background from foreground and blended-image conditions."
     )
-    parser.add_argument("--weight", default="weights/diffuser_layer_xl_fgble2bg.safetensors")
+    parser.add_argument(
+        "--weight",
+        default=DEFAULT_WEIGHT_NAME,
+        help="Weight filename in --weight-repo. The file is loaded from the Hugging Face cache.",
+    )
+    parser.add_argument("--weight-repo", default=DEFAULT_WEIGHT_REPO, help="Hugging Face repo for remote weights.")
     parser.add_argument("--foreground", default="assets/sdxl_fg_cond_detailed.png")
     parser.add_argument("--blend", default="assets/sdxl_fg2ble_detailed_default_scheduler.png")
     parser.add_argument("--output", default="result_xl_fgble2bg.png")
@@ -55,6 +65,10 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=12345)
     parser.add_argument("--cpu-offload", action="store_true", help="Use accelerate CPU offload instead of .to('cuda').")
     return parser.parse_args()
+
+
+def download_weight(weight, repo_id):
+    return hf_hub_download(repo_id=repo_id, filename=weight)
 
 
 def load_pipeline(args):
@@ -228,12 +242,7 @@ def continue_base_pipeline(pipeline, args, latents, remaining_timesteps, schedul
 
 if __name__ == "__main__":
     args = parse_args()
-    weight_path = Path(args.weight)
-    if not weight_path.exists():
-        raise FileNotFoundError(
-            f"Converted weight not found at {weight_path}. Run "
-            "`python scripts/convert_xl_fgble2bg.py --input /path/to/layer_xl_fgble2bg.safetensors` first."
-        )
+    weight_path = download_weight(args.weight, args.weight_repo)
     for image_path in [args.foreground, args.blend]:
         if not Path(image_path).exists():
             raise FileNotFoundError(f"Condition image not found: {image_path}")

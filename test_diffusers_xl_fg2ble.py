@@ -1,9 +1,9 @@
 import argparse
-from pathlib import Path
 
 import numpy as np
 import torch
 from diffusers import AutoencoderKL, StableDiffusionXLPipeline
+from huggingface_hub import hf_hub_download
 from safetensors.torch import load_file
 from PIL import Image
 
@@ -12,6 +12,10 @@ from layer_diffuse.loaders import (
     merge_sdxl_concat_delta_weights_into_unet,
 )
 from layer_diffuse.utils import crop_and_resize_image, rgba2rgbfp32
+
+
+DEFAULT_WEIGHT_REPO = "rootonchair/diffuser_layerdiffuse"
+DEFAULT_WEIGHT_NAME = "diffuser_layer_xl_fg2ble.safetensors"
 
 
 def encode_condition_image(pipeline, image_path, width, height):
@@ -29,7 +33,12 @@ def encode_condition_image(pipeline, image_path, width, height):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate an SDXL blended image from a foreground condition.")
-    parser.add_argument("--weight", default="weights/diffuser_layer_xl_fg2ble.safetensors")
+    parser.add_argument(
+        "--weight",
+        default=DEFAULT_WEIGHT_NAME,
+        help="Weight filename in --weight-repo. The file is loaded from the Hugging Face cache.",
+    )
+    parser.add_argument("--weight-repo", default=DEFAULT_WEIGHT_REPO, help="Hugging Face repo for remote weights.")
     parser.add_argument("--foreground", default="assets/sdxl_fg_cond_detailed.png")
     parser.add_argument("--output", default="result_xl_fg2ble.png")
     parser.add_argument("--model", default="stabilityai/stable-diffusion-xl-base-1.0")
@@ -47,14 +56,13 @@ def parse_args():
     return parser.parse_args()
 
 
+def download_weight(weight, repo_id):
+    return hf_hub_download(repo_id=repo_id, filename=weight)
+
+
 if __name__ == "__main__":
     args = parse_args()
-    weight_path = Path(args.weight)
-    if not weight_path.exists():
-        raise FileNotFoundError(
-            f"Converted weight not found at {weight_path}. Run "
-            "`python scripts/convert_xl_fg2ble.py --input /path/to/layer_xl_fg2ble.safetensors` first."
-        )
+    weight_path = download_weight(args.weight, args.weight_repo)
 
     vae = AutoencoderKL.from_pretrained(args.vae, torch_dtype=torch.float16)
     vae.config.force_upcast = False
