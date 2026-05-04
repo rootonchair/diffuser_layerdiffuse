@@ -13,6 +13,16 @@ Paper: [Transparent Image Layer Diffusion using Latent Transparency](https://arx
 pip install -r requirements.txt
 ```
 
+## Tests
+```bash
+python -m pytest
+```
+
+Optional GPU/model-download smoke tests are skipped by default. Run them explicitly with:
+```bash
+LAYERDIFFUSE_RUN_GPU_SMOKE=1 python -m pytest -m gpu
+```
+
 ## Quickstart
 
 Generate transparent image with SD1.5 models. In this example, we will use [digiplay/Juggernaut_final](https://huggingface.co/digiplay/Juggernaut_final) as the base model
@@ -105,8 +115,57 @@ images[0].save("result_sdxl.png")
 - `test_diffusers_fg_only_sdxl.py`: Only generate transparent foreground image using Attention injection in SDXL
 - `test_diffusers_fg_only_conv_sdxl.py`: Only generate transparent foreground image using Conv injection in SDXL
 - `test_diffusers_fg_only_sdxl_img2img.py`: Generate transparent foreground image inpaint using Attention injection in SDXL
+- `test_diffusers_xl_fg2ble.py`: Generate an SDXL blended image from a foreground condition using the converted `layer_xl_fg2ble.safetensors` delta
+- `test_diffusers_xl_fgble2bg.py`: Generate an SDXL background from foreground and blend conditions using the converted `layer_xl_fgble2bg.safetensors` delta
 
 It is said by the author that Attention injection would result in better generation quality and Conv injection would result in better prompt alignment
+
+### Convert SDXL Foreground-to-Blending Weight
+
+Convert the Forge delta weight to Diffusers key names before running the fg2ble example:
+
+```bash
+python scripts/convert_xl_fg2ble.py \
+  --input /mnt/disks/workspace/sd-forge-layerdiffuse/layer_xl_fg2ble.safetensors \
+  --output weights/diffuser_layer_xl_fg2ble.safetensors
+```
+
+Then run inference:
+
+```bash
+python test_diffusers_xl_fg2ble.py \
+  --foreground assets/sdxl_fg_cond_detailed.png \
+  --output result_xl_fg2ble.png
+```
+
+| SDXL foreground condition | Generated blended image |
+|:-------------------------:|:-----------------------:|
+| ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL foreground-to-blending result](assets/sdxl_fg2ble_detailed_default_scheduler.png) |
+
+For the foreground-and-blend-to-background model, convert the 12-channel concat delta:
+
+```bash
+python scripts/convert_xl_fgble2bg.py \
+  --input /mnt/disks/workspace/sd-forge-layerdiffuse/layer_xl_fgble2bg.safetensors \
+  --output weights/diffuser_layer_xl_fgble2bg.safetensors
+```
+
+Then run inference with a transparent foreground and a blended image:
+
+```bash
+python test_diffusers_xl_fgble2bg.py \
+  --foreground assets/sdxl_fg_cond_detailed.png \
+  --blend assets/sdxl_fg2ble_detailed_default_scheduler.png \
+  --output result_xl_fgble2bg.png
+```
+
+The fgble2bg example forces DPM++ 2M SDE Karras via Diffusers'
+`DPMSolverMultistepScheduler` and defaults to an 11-step fg+blend pass followed by
+a 9-step base-UNet cleanup pass when `--steps 20` is used.
+
+| Foreground condition | Blended condition | Generated background |
+|:--------------------:|:-----------------:|:--------------------:|
+| ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL blended condition](assets/sdxl_fg2ble_detailed_default_scheduler.png) | ![SDXL foreground-and-blend-to-background result](assets/sdxl_fgble2bg_dpm_forced.png) |
 
 ## Example
 ### Stable Diffusion 1.5

@@ -5,3 +5,5 @@ huggingface_hub
 einops
 opencv-python
 tqdm
+pytest
+accelerate
