@@ -171,8 +171,21 @@ python scripts/convert_xl_layerdiffuse.py \
 ## Example
 ### Stable Diffusion 1.5
 #### Generate only transparent image with SD1.5
+
+```bash
+python test_diffusers_fg_only.py \
+  --prompt "a dog sitting in room, high quality" \
+  --outputs result.png result1.png result2.png
+```
+
 ![demo_dreamshaper](assets/dreamshaper_sd.png)
 #### Generate foreground and background together
+
+```bash
+python test_diffusers_joint.py \
+  --prompt "a dog sitting in room, high quality" \
+  --outputs result_joint_0.png result_joint_1.png result_joint_2.png
+```
 
 |              Foreground               |              Background               |                Blended                |
 |:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
@@ -191,12 +204,24 @@ python scripts/convert_xl_layerdiffuse.py \
 
 The blended image will not have the correct color but you can apply foreground image on the condition background.
 
+```bash
+python test_diffusers_fg_bg_cond.py \
+  --background assets/bg_cond.png \
+  --outputs result.png result1.png
+```
+
 |              Foreground               |              Background (Condition)              |                Blended                |
 |:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
 | ![fg](assets/result_fg_bg_cond.png)      |   ![bg](assets/bg_cond.png)    | ![blend](assets/result_blended_fg_bg_cond.png)   |
 
 
 #### Generate background condition on foreground
+
+```bash
+python test_diffusers_bg_fg_cond.py \
+  --foreground assets/fg_cond.png \
+  --outputs fg_result.png fg_result1.png
+```
 
 |              Foreground (Condition)              |              Background               |                Blended                |
 |:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
@@ -298,12 +323,35 @@ python test_diffusers_xl_bgble2fg.py \
 #### Combine with other LoRAs
 Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel-art-xl)
 
+```bash
+python test_diffusers_fg_only_sdxl.py \
+  --prompt "a cute corgi" \
+  --variant fp16 \
+  --output result_sdxl.png
+```
+
+```bash
+python test_diffusers_fg_only_conv_sdxl.py \
+  --prompt "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k" \
+  --negative-prompt "bad quality, distorted" \
+  --variant fp16 \
+  --output result_conv_sdxl.png
+```
+
 |      Attn Injection (LoRA)                |        Conv Injection (Weight diff)            |
 |:-------------------------------------:|:-------------------------------------:|
 | ![sdxl_attn](assets/result_sdxl.png)      |   ![sdxl_conv](assets/result_conv_sdxl.png)    |
 
 #### Inpaint
 Use inpaint pipeline to refine poorly cropped transparent image
+
+```bash
+python test_diffusers_fg_only_sdxl_img2img.py \
+  --init-image assets/man_crop.png \
+  --mask-image assets/man_mask.png \
+  --variant fp16 \
+  --output result_inpaint_sdxl.png
+```
 
 |              Foreground               |              Mask               |                Inpaint                |
 |:-------------------------------------:|:-------------------------------------:|:-------------------------------------:|
