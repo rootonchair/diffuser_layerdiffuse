@@ -1,6 +1,6 @@
 import torch
 
-from scripts.convert_xl_fg2ble import convert_ldm_unet_delta_key, convert_state_dict
+from scripts.convert_xl_layerdiffuse import convert_ldm_unet_delta_key, convert_state_dict
 
 
 def test_convert_ldm_unet_delta_key_examples():
@@ -19,6 +19,20 @@ def test_convert_ldm_unet_delta_key_examples():
     assert (
         convert_ldm_unet_delta_key("diffusion_model.output_blocks.2.2.conv.weight::diff::0")
         == "up_blocks.0.upsamplers.0.conv.weight"
+    )
+    assert (
+        convert_ldm_unet_delta_key("diffusion_model.input_blocks.4.1.norm.weight::diff::0")
+        == "down_blocks.1.attentions.0.norm.weight"
+    )
+    assert (
+        convert_ldm_unet_delta_key(
+            "diffusion_model.middle_block.1.transformer_blocks.0.attn1.to_out.0.weight::diff::0"
+        )
+        == "mid_block.attentions.0.transformer_blocks.0.attn1.to_out.0.weight"
+    )
+    assert (
+        convert_ldm_unet_delta_key("diffusion_model.output_blocks.3.1.proj_out.bias::diff::0")
+        == "up_blocks.1.attentions.0.proj_out.bias"
     )
 
 
@@ -43,6 +57,28 @@ def test_convert_state_dict_remaps_and_validates():
 
 
 def test_convert_state_dict_accepts_fgble2bg_12_channel_input():
+    state_dict = {
+        "diffusion_model.input_blocks.0.0.weight::diff::0": torch.zeros(320, 12, 3, 3),
+        "diffusion_model.input_blocks.0.0.bias::diff::0": torch.zeros(320),
+    }
+
+    converted = convert_state_dict(state_dict, expected_input_channels=12)
+
+    assert converted["conv_in.weight"].shape == (320, 12, 3, 3)
+
+
+def test_convert_state_dict_accepts_bg2ble_8_channel_input():
+    state_dict = {
+        "diffusion_model.input_blocks.0.0.weight::diff::0": torch.zeros(320, 8, 3, 3),
+        "diffusion_model.input_blocks.0.0.bias::diff::0": torch.zeros(320),
+    }
+
+    converted = convert_state_dict(state_dict, expected_input_channels=8)
+
+    assert converted["conv_in.weight"].shape == (320, 8, 3, 3)
+
+
+def test_convert_state_dict_accepts_bgble2fg_12_channel_input():
     state_dict = {
         "diffusion_model.input_blocks.0.0.weight::diff::0": torch.zeros(320, 12, 3, 3),
         "diffusion_model.input_blocks.0.0.bias::diff::0": torch.zeros(320),

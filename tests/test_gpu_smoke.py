@@ -37,6 +37,36 @@ def test_xl_fg2ble_example_gpu_smoke(tmp_path):
 
 
 @pytest.mark.gpu
+def test_xl_bg2ble_example_gpu_smoke(tmp_path):
+    if os.getenv("LAYERDIFFUSE_RUN_GPU_SMOKE") != "1":
+        pytest.skip("Set LAYERDIFFUSE_RUN_GPU_SMOKE=1 to run model-download GPU smoke tests.")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is not available.")
+    if not Path("assets/bg_cond.png").exists():
+        pytest.skip("Required bg2ble smoke input is not available: assets/bg_cond.png")
+
+    output = tmp_path / "result_xl_bg2ble.png"
+    subprocess.run(
+        [
+            sys.executable,
+            "test_diffusers_xl_bg2ble.py",
+            "--steps",
+            "1",
+            "--width",
+            "512",
+            "--height",
+            "512",
+            "--output",
+            str(output),
+        ],
+        check=True,
+    )
+    assert output.exists()
+    image = Image.open(output)
+    assert image.getextrema() != ((0, 0), (0, 0), (0, 0))
+
+
+@pytest.mark.gpu
 def test_xl_fgble2bg_example_gpu_smoke(tmp_path):
     if os.getenv("LAYERDIFFUSE_RUN_GPU_SMOKE") != "1":
         pytest.skip("Set LAYERDIFFUSE_RUN_GPU_SMOKE=1 to run model-download GPU smoke tests.")
@@ -69,3 +99,38 @@ def test_xl_fgble2bg_example_gpu_smoke(tmp_path):
     assert output.exists()
     image = Image.open(output)
     assert image.getextrema() != ((0, 0), (0, 0), (0, 0))
+
+
+@pytest.mark.gpu
+def test_xl_bgble2fg_example_gpu_smoke(tmp_path):
+    if os.getenv("LAYERDIFFUSE_RUN_GPU_SMOKE") != "1":
+        pytest.skip("Set LAYERDIFFUSE_RUN_GPU_SMOKE=1 to run model-download GPU smoke tests.")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is not available.")
+    required = [
+        Path("assets/bg_cond_forge_sanity.png"),
+        Path("assets/sdxl_bg2ble_forge_sanity_dpm.png"),
+    ]
+    for path in required:
+        if not path.exists():
+            pytest.skip(f"Required bgble2fg smoke input is not available: {path}")
+
+    output = tmp_path / "result_xl_bgble2fg.png"
+    subprocess.run(
+        [
+            sys.executable,
+            "test_diffusers_xl_bgble2fg.py",
+            "--steps",
+            "1",
+            "--width",
+            "512",
+            "--height",
+            "512",
+            "--output",
+            str(output),
+        ],
+        check=True,
+    )
+    assert output.exists()
+    image = Image.open(output)
+    assert image.getbbox() is not None

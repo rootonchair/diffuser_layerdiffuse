@@ -116,7 +116,9 @@ images[0].save("result_sdxl.png")
 - `test_diffusers_fg_only_conv_sdxl.py`: Only generate transparent foreground image using Conv injection in SDXL
 - `test_diffusers_fg_only_sdxl_img2img.py`: Generate transparent foreground image inpaint using Attention injection in SDXL
 - `test_diffusers_xl_fg2ble.py`: Generate an SDXL blended image from a foreground condition using the converted `layer_xl_fg2ble.safetensors` delta
+- `test_diffusers_xl_bg2ble.py`: Generate an SDXL blended image from a background condition using the converted `layer_xl_bg2ble.safetensors` delta
 - `test_diffusers_xl_fgble2bg.py`: Generate an SDXL background from foreground and blend conditions using the converted `layer_xl_fgble2bg.safetensors` delta
+- `test_diffusers_xl_bgble2fg.py`: Generate an SDXL transparent foreground from background and blend conditions using the converted `layer_xl_bgble2fg.safetensors` delta
 
 It is said by the author that Attention injection would result in better generation quality and Conv injection would result in better prompt alignment
 
@@ -129,17 +131,37 @@ need to convert original Forge-format weights yourself.
 Convert foreground-to-blending:
 
 ```bash
-python scripts/convert_xl_fg2ble.py \
+python scripts/convert_xl_layerdiffuse.py \
+  --mode fg2ble \
   --input path/to/layer_xl_fg2ble.safetensors \
   --output weights/diffuser_layer_xl_fg2ble.safetensors
+```
+
+Convert background-to-blending:
+
+```bash
+python scripts/convert_xl_layerdiffuse.py \
+  --mode bg2ble \
+  --input path/to/layer_xl_bg2ble.safetensors \
+  --output weights/diffuser_layer_xl_bg2ble.safetensors
 ```
 
 Convert foreground-and-blend-to-background:
 
 ```bash
-python scripts/convert_xl_fgble2bg.py \
+python scripts/convert_xl_layerdiffuse.py \
+  --mode fgble2bg \
   --input path/to/layer_xl_fgble2bg.safetensors \
   --output weights/diffuser_layer_xl_fgble2bg.safetensors
+```
+
+Convert background-and-blend-to-foreground:
+
+```bash
+python scripts/convert_xl_layerdiffuse.py \
+  --mode bgble2fg \
+  --input path/to/layer_xl_bgble2fg.safetensors \
+  --output weights/diffuser_layer_xl_bgble2fg.safetensors
 ```
 
 ## Example
@@ -193,6 +215,25 @@ python test_diffusers_xl_fg2ble.py \
 |:-------------------------:|:-----------------------:|
 | ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL foreground-to-blending result](assets/sdxl_fg2ble_detailed_default_scheduler.png) |
 
+#### Background condition
+
+The bg2ble example downloads `diffuser_layer_xl_bg2ble.safetensors` from
+`rootonchair/diffuser_layerdiffuse` into the Hugging Face cache and loads it
+from there. It forces DPM++ 2M SDE Karras to match the Forge sanity-check
+workflow:
+
+```bash
+python test_diffusers_xl_bg2ble.py \
+  --background assets/bg_cond_forge_sanity.png \
+  --output result_xl_bg2ble.png
+```
+
+| SDXL background condition | Generated blended image |
+|:-------------------------:|:-----------------------:|
+| ![SDXL background condition](assets/bg_cond_forge_sanity.png) | ![SDXL background-to-blending result](assets/sdxl_bg2ble_forge_sanity_dpm.png) |
+
+#### Foreground and blended conditions
+
 The fgble2bg example downloads `diffuser_layer_xl_fgble2bg.safetensors` from
 `rootonchair/diffuser_layerdiffuse` into the Hugging Face cache and loads it
 from there:
@@ -211,6 +252,24 @@ a 9-step base-UNet cleanup pass when `--steps 20` is used.
 | Foreground condition | Blended condition | Generated background |
 |:--------------------:|:-----------------:|:--------------------:|
 | ![SDXL foreground condition](assets/sdxl_fg_cond_detailed.png) | ![SDXL blended condition](assets/sdxl_fg2ble_detailed_default_scheduler.png) | ![SDXL foreground-and-blend-to-background result](assets/sdxl_fgble2bg_dpm_forced.png) |
+
+#### Background and blended conditions
+
+The bgble2fg example downloads `diffuser_layer_xl_bgble2fg.safetensors` from
+`rootonchair/diffuser_layerdiffuse` into the Hugging Face cache and uses the
+transparent VAE decoder with the model's default scheduler to write an RGBA
+foreground PNG:
+
+```bash
+python test_diffusers_xl_bgble2fg.py \
+  --background assets/bg_cond_forge_sanity.png \
+  --blend assets/sdxl_bg2ble_forge_sanity_dpm.png \
+  --output result_xl_bgble2fg.png
+```
+
+| Background condition | Blended condition | Generated foreground |
+|:--------------------:|:-----------------:|:--------------------:|
+| ![SDXL background condition](assets/bg_cond_forge_sanity.png) | ![SDXL blended condition](assets/sdxl_bg2ble_forge_sanity_dpm.png) | ![SDXL background-and-blend-to-foreground result](assets/sdxl_bgble2fg_default_scheduler.png) |
 
 #### Combine with other LoRAs
 Combine with SDXL Lora [nerijs/pixel-art-xl](https://huggingface.co/nerijs/pixel-art-xl)

@@ -5,7 +5,24 @@ from pathlib import Path
 from safetensors.torch import load_file, save_file
 
 
-DEFAULT_OUTPUT = Path("weights/diffuser_layer_xl_fg2ble.safetensors")
+MODE_CONFIGS = {
+    "fg2ble": {
+        "expected_input_channels": 8,
+        "output": Path("weights/diffuser_layer_xl_fg2ble.safetensors"),
+    },
+    "bg2ble": {
+        "expected_input_channels": 8,
+        "output": Path("weights/diffuser_layer_xl_bg2ble.safetensors"),
+    },
+    "fgble2bg": {
+        "expected_input_channels": 12,
+        "output": Path("weights/diffuser_layer_xl_fgble2bg.safetensors"),
+    },
+    "bgble2fg": {
+        "expected_input_channels": 12,
+        "output": Path("weights/diffuser_layer_xl_bgble2fg.safetensors"),
+    },
+}
 _DIFF_SUFFIX_RE = re.compile(r"::diff::\d+$")
 
 
@@ -55,10 +72,21 @@ def convert_ldm_unet_delta_key(key, layers_per_block=2):
             f"{_convert_resnet_path(match.group(2))}"
         )
 
+    match = re.match(r"input_blocks\.(\d+)\.1\.(.+)$", key)
+    if match:
+        block_index = int(match.group(1))
+        block_id = (block_index - 1) // (layers_per_block + 1)
+        layer_in_block_id = (block_index - 1) % (layers_per_block + 1)
+        return f"down_blocks.{block_id}.attentions.{layer_in_block_id}.{match.group(2)}"
+
     match = re.match(r"middle_block\.(0|2)\.(.+)$", key)
     if match:
         resnet_id = 0 if match.group(1) == "0" else 1
         return f"mid_block.resnets.{resnet_id}.{_convert_resnet_path(match.group(2))}"
+
+    match = re.match(r"middle_block\.1\.(.+)$", key)
+    if match:
+        return f"mid_block.attentions.0.{match.group(1)}"
 
     match = re.match(r"output_blocks\.(\d+)\.0\.(.+)$", key)
     if match:
@@ -69,6 +97,13 @@ def convert_ldm_unet_delta_key(key, layers_per_block=2):
             f"up_blocks.{block_id}.resnets.{layer_in_block_id}."
             f"{_convert_resnet_path(match.group(2))}"
         )
+
+    match = re.match(r"output_blocks\.(\d+)\.1\.(.+)$", key)
+    if match:
+        block_index = int(match.group(1))
+        block_id = block_index // (layers_per_block + 1)
+        layer_in_block_id = block_index % (layers_per_block + 1)
+        return f"up_blocks.{block_id}.attentions.{layer_in_block_id}.{match.group(2)}"
 
     match = re.match(r"output_blocks\.(\d+)\.\d+\.conv\.(weight|bias)$", key)
     if match:
@@ -108,9 +143,7 @@ def convert_file(input_path, output_path, expected_input_channels=8):
     input_path = Path(input_path)
     output_path = Path(output_path)
     if not input_path.exists():
-        raise FileNotFoundError(
-            f"Forge weight not found: {input_path}. Pass --input pointing to layer_xl_fg2ble.safetensors."
-        )
+        raise FileNotFoundError(f"Forge weight not found: {input_path}. Pass --input pointing to a Forge weight.")
 
     state_dict = load_file(str(input_path), device="cpu")
     converted = convert_state_dict(state_dict, expected_input_channels=expected_input_channels)
@@ -120,19 +153,26 @@ def convert_file(input_path, output_path, expected_input_channels=8):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Convert Forge layer_xl_fg2ble.safetensors to Diffusers keys.")
-    parser.add_argument("--input", type=Path, required=True, help="Path to Forge layer_xl_fg2ble.safetensors.")
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="Converted Diffusers delta output path.")
-    parser.add_argument("--expected-input-channels", type=int, default=8)
+    parser = argparse.ArgumentParser(description="Convert Forge SDXL LayerDiffuse weights to Diffusers keys.")
+    parser.add_argument("--mode", choices=sorted(MODE_CONFIGS), required=True)
+    parser.add_argument("--input", type=Path, required=True, help="Path to the Forge SDXL LayerDiffuse weight.")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Converted Diffusers delta output path. Defaults to the selected mode's weights/ filename.",
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    config = MODE_CONFIGS[args.mode]
+    output = args.output if args.output is not None else config["output"]
     output_path, key_count = convert_file(
         args.input,
-        args.output,
-        expected_input_channels=args.expected_input_channels,
+        output,
+        expected_input_channels=config["expected_input_channels"],
     )
     print(f"Saved {key_count} converted tensors to {output_path}")
 
