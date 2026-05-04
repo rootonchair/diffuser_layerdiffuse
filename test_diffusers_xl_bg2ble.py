@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -39,7 +40,7 @@ def parse_args():
         help="Weight filename in --weight-repo. The file is loaded from the Hugging Face cache.",
     )
     parser.add_argument("--weight-repo", default=DEFAULT_WEIGHT_REPO, help="Hugging Face repo for remote weights.")
-    parser.add_argument("--background", default="assets/bg_cond.png")
+    parser.add_argument("--background", default="assets/bg_cond_forge_sanity.png")
     parser.add_argument("--output", default="result_xl_bg2ble.png")
     parser.add_argument("--model", default="stabilityai/stable-diffusion-xl-base-1.0")
     parser.add_argument("--variant", default="fp16", help="Model variant to load. Use 'none' for repos without variants.")
@@ -65,10 +66,7 @@ def make_generator(seed):
     return torch.Generator(device=device).manual_seed(seed)
 
 
-if __name__ == "__main__":
-    args = parse_args()
-    weight_path = download_weight(args.weight, args.weight_repo)
-
+def load_pipeline(args):
     vae = AutoencoderKL.from_pretrained(args.vae, torch_dtype=torch.float16)
     vae.config.force_upcast = False
 
@@ -94,6 +92,16 @@ if __name__ == "__main__":
         pipeline.enable_model_cpu_offload()
     else:
         pipeline = pipeline.to("cuda")
+    return pipeline
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    weight_path = download_weight(args.weight, args.weight_repo)
+    if not Path(args.background).exists():
+        raise FileNotFoundError(f"Condition image not found: {args.background}")
+
+    pipeline = load_pipeline(args)
 
     diff_state_dict = load_file(str(weight_path))
     merge_sdxl_concat_delta_weights_into_unet(pipeline, diff_state_dict)

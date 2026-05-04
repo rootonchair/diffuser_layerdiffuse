@@ -107,6 +107,10 @@ images[0].save("result_sdxl.png")
 
 ## Scripts
 
+All demo scripts expose CLI defaults for model, prompt, seed, output path, and
+`--cpu-offload` where applicable. Run any script with `--help` to see its
+overrides.
+
 - `test_diffusers_fg_only.py`: Only generate transparent foreground image
 - `test_diffusers_joint.py`: Generate foreground, background, blend image together. Hence `num_images_per_prompt` must be batch size of 3
 - `test_diffusers_fg_bg_cond.py`: Generate foreground, conditioned on background provided. Hence `num_images_per_prompt` must be batch size of 2
@@ -199,6 +203,23 @@ The blended image will not have the correct color but you can apply foreground i
 | ![fg](assets/fg_cond.png)      |   ![bg](assets/result_bg_fg_cond.png)    | ![blend](assets/result_blended_bg_fg_cond.png)   |
 
 ### Stable Diffusion XL
+
+All SDXL conditional scripts share the same loading pattern: converted weights
+are downloaded from `rootonchair/diffuser_layerdiffuse` into the Hugging Face
+cache, `--variant none` can be used for models without Diffusers variants, and
+`--cpu-offload` enables Accelerate CPU offload for lower VRAM usage.
+
+The default SDXL base model uses `--variant fp16`. For checkpoints or Diffusers
+repos without fp16 variant files, disable variant loading:
+
+```bash
+python test_diffusers_xl_bgble2fg.py \
+  --model RunDiffusion/Juggernaut-XL-v6 \
+  --variant none \
+  --no-use-safetensors \
+  --cpu-offload
+```
+
 #### Foreground condition
 
 The fg2ble example downloads `diffuser_layer_xl_fg2ble.safetensors` from
@@ -208,6 +229,7 @@ from there:
 ```bash
 python test_diffusers_xl_fg2ble.py \
   --foreground assets/sdxl_fg_cond_detailed.png \
+  --variant fp16 \
   --output result_xl_fg2ble.png
 ```
 
@@ -224,7 +246,7 @@ workflow:
 
 ```bash
 python test_diffusers_xl_bg2ble.py \
-  --background assets/bg_cond_forge_sanity.png \
+  --variant fp16 \
   --output result_xl_bg2ble.png
 ```
 
@@ -242,6 +264,7 @@ from there:
 python test_diffusers_xl_fgble2bg.py \
   --foreground assets/sdxl_fg_cond_detailed.png \
   --blend assets/sdxl_fg2ble_detailed_default_scheduler.png \
+  --variant fp16 \
   --output result_xl_fgble2bg.png
 ```
 
@@ -264,6 +287,7 @@ foreground PNG:
 python test_diffusers_xl_bgble2fg.py \
   --background assets/bg_cond_forge_sanity.png \
   --blend assets/sdxl_bg2ble_forge_sanity_dpm.png \
+  --variant fp16 \
   --output result_xl_bgble2fg.png
 ```
 

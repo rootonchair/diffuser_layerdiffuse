@@ -1,11 +1,12 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 import torch
 from diffusers import AutoencoderKL, StableDiffusionXLPipeline
 from huggingface_hub import hf_hub_download
-from safetensors.torch import load_file
 from PIL import Image
+from safetensors.torch import load_file
 
 from layer_diffuse.loaders import (
     enable_unet_extra_concat_condition,
@@ -60,10 +61,12 @@ def download_weight(weight, repo_id):
     return hf_hub_download(repo_id=repo_id, filename=weight)
 
 
-if __name__ == "__main__":
-    args = parse_args()
-    weight_path = download_weight(args.weight, args.weight_repo)
+def make_generator(seed):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return torch.Generator(device=device).manual_seed(seed)
 
+
+def load_pipeline(args):
     vae = AutoencoderKL.from_pretrained(args.vae, torch_dtype=torch.float16)
     vae.config.force_upcast = False
 
@@ -82,6 +85,16 @@ if __name__ == "__main__":
         pipeline.enable_model_cpu_offload()
     else:
         pipeline = pipeline.to("cuda")
+    return pipeline
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    weight_path = download_weight(args.weight, args.weight_repo)
+    if not Path(args.foreground).exists():
+        raise FileNotFoundError(f"Condition image not found: {args.foreground}")
+
+    pipeline = load_pipeline(args)
 
     diff_state_dict = load_file(str(weight_path))
     merge_sdxl_concat_delta_weights_into_unet(pipeline, diff_state_dict)
@@ -96,7 +109,7 @@ if __name__ == "__main__":
         height=args.height,
         num_inference_steps=args.steps,
         guidance_scale=args.guidance_scale,
-        generator=torch.Generator(device="cuda").manual_seed(args.seed),
+        generator=make_generator(args.seed),
         num_images_per_prompt=1,
         return_dict=False,
     )[0]

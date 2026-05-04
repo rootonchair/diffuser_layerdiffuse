@@ -42,8 +42,8 @@ def test_xl_bg2ble_example_gpu_smoke(tmp_path):
         pytest.skip("Set LAYERDIFFUSE_RUN_GPU_SMOKE=1 to run model-download GPU smoke tests.")
     if not torch.cuda.is_available():
         pytest.skip("CUDA is not available.")
-    if not Path("assets/bg_cond.png").exists():
-        pytest.skip("Required bg2ble smoke input is not available: assets/bg_cond.png")
+    if not Path("assets/bg_cond_forge_sanity.png").exists():
+        pytest.skip("Required bg2ble smoke input is not available: assets/bg_cond_forge_sanity.png")
 
     output = tmp_path / "result_xl_bg2ble.png"
     subprocess.run(
